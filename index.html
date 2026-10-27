@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Метафоричні карти</title>
+<title>Soul</title>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -66,6 +66,8 @@ main.laid .deck{display:none}
 #spread button.chosen .in{transform:rotateY(180deg)}
 #spread.done button:not(.chosen){opacity:.35;pointer-events:none}
 @media (hover:hover){#spread:not(.done) button:hover{transform:translateY(-6px)}}
+#big{width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;animation:pop .5s both}
+#big .wrap{width:min(100%,420px)}
 .pick{margin:0;color:var(--gold);font-size:1.1rem;min-height:1.4em}
 .thumbs img{width:100%;max-width:100%;aspect-ratio:1037/1517;object-fit:fill;border-radius:8px;display:block;box-shadow:0 6px 18px #0008}
 .pos{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:var(--gold)}
@@ -134,6 +136,11 @@ main.laid .deck{display:none}
 
   <div id="spread"></div>
 
+  <div id="big" hidden>
+    <button class="wrap" id="bwrap" aria-label="Перевернути карту"><div class="flip" id="bflip"><img id="bf" alt=""><img id="bb" alt="Послання карти"></div></button>
+    <p class="hint">Торкніться карти, щоб перевернути й прочитати послання</p>
+  </div>
+
   <section id="reflect" hidden aria-labelledby="rh">
     <h2 id="rh">Робота з картою</h2>
     <p class="q" id="rq" hidden></p>
@@ -185,7 +192,7 @@ const byId=id=>CARDS.find(c=>c.t==id);
 SUGG.forEach(t=>{const b=document.createElement('button');b.className='chip';b.textContent=t;b.onclick=()=>{$('question').value=t};$('sugg').appendChild(b)});
 
 /* modes: choose from three or from the whole deck */
-function reset(){$('spread').innerHTML='';$('spread').className='';document.querySelector('main').classList.remove('laid');$('pick').textContent='';$('draw').textContent='Розкласти карти';$('reflect').hidden=true;current=null}
+function reset(){$('big').hidden=true;$('spread').hidden=false;$('spread').innerHTML='';$('spread').className='';document.querySelector('main').classList.remove('laid');$('pick').textContent='';$('draw').textContent='Розкласти карти';$('reflect').hidden=true;current=null}
 function setMode(m){mode=m;$('m1').setAttribute('aria-pressed',m==3);$('m3').setAttribute('aria-pressed',m!=3);reset()}
 $('m1').onclick=()=>{setMode(3);buzz()};$('m3').onclick=()=>{setMode(CARDS.length);buzz()};
 
@@ -198,7 +205,7 @@ $('close').onclick=()=>{$('viewer').classList.remove('on');buzz()};
 /* drawing: lay cards face down, the person picks one */
 function draw(){
   const d=$('deck');d.classList.remove('go');void d.offsetWidth;d.classList.add('go');buzz();
-  const sp=$('spread');sp.innerHTML='';sp.className='';document.querySelector('main').classList.add('laid');$('reflect').hidden=true;current=null;
+  $('big').hidden=true;const sp=$('spread');sp.hidden=false;sp.innerHTML='';sp.className='';document.querySelector('main').classList.add('laid');$('reflect').hidden=true;current=null;
   shuffle(CARDS.map((_,i)=>i)).slice(0,Math.min(mode,CARDS.length)).forEach((i,n)=>{
     const b=document.createElement('button');b.setAttribute('aria-label','Карта '+(n+1)+', закрита');
     b.innerHTML='<span class="c"><span class="in"><span class="bk"></span><img alt=""></span></span>';
@@ -206,17 +213,17 @@ function draw(){
   $('pick').textContent='Прислухайтеся до себе й торкніться однієї карти';$('draw').textContent='Розкласти знову'
 }
 function choose(b,i){
-  const sp=$('spread');buzz();
-  if(sp.classList.contains('done')){openCard(CARDS[i],'');return}
-  const img=b.querySelector('img');img.src=CARDS[i].f;img.alt=CARDS[i].t;
-  b.classList.add('chosen');b.setAttribute('aria-label',CARDS[i].t);sp.classList.add('done');
+  buzz();
+  $('bf').src=CARDS[i].f;$('bf').alt=CARDS[i].t;$('bb').src=CARDS[i].b;$('bflip').classList.remove('on');
+  $('spread').hidden=true;$('big').hidden=false;
   $('pick').textContent='Ваша карта: '+CARDS[i].t;
   current={date:new Date().toISOString(),q:$('question').value.trim(),layout:mode==3?'three':'all',cards:[{t:CARDS[i].t,p:''}]};
   $('qs').innerHTML='';QS.forEach(t=>{const li=document.createElement('li');li.textContent=t;$('qs').appendChild(li)});
   $('rq').hidden=!current.q;$('rq').textContent=current.q?'«'+current.q+'»':'';
   $('note').value='';$('savedMsg').hidden=true;$('reflect').hidden=false;
-  setTimeout(()=>openCard(CARDS[i],''),900)
+  $('pick').scrollIntoView({behavior:'smooth',block:'start'})
 }
+$('bwrap').onclick=()=>{$('bflip').classList.toggle('on');buzz()};
 $('draw').onclick=draw;$('deck').onclick=draw;
 
 /* diary */
